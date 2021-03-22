@@ -38,17 +38,12 @@ import io.swagger.annotations.SwaggerDefinition;
 @Api
 @SwaggerDefinition(
 		info = @Info(
-				title = "las2peer Template Service",
-				version = "1.0.0",
-				description = "A las2peer Template Service for demonstration purposes.",
-				termsOfService = "http://your-terms-of-service-url.com",
+				title = "Sensor Proxy Service",
+				version = "0.1.0",
+				description = "A las2peer service that allows the gathering, processing and forwarding sensor data to an LRS.",
 				contact = @Contact(
-						name = "John Doe",
-						url = "provider.com",
-						email = "john.doe@provider.com"),
-				license = @License(
-						name = "your software license name",
-						url = "http://your-software-license-url.com")))
+						name = "Boris Jovanovic",
+						email = "jovanovic.boris@rwth-aachen.de")))
 @ServicePath("/template")
 // TODO Your own service class
 public class SensorProxyService extends RESTService {

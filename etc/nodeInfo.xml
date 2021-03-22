@@ -1,6 +1,6 @@
 <las2peerNode>
-	<adminName>Admin</adminName>
-	<adminEmail>admin@mail.com</adminEmail>
+	<adminName>Boris Jovanovic</adminName>
+	<adminEmail>jovanovic.boris@rwth-aachen.de</adminEmail>
 	<organization>Advanced Community Information Systems (ACIS) Group, RWTH Aachen University</organization>
-	<description>This node hosts a sample service.</description>
+	<description>This node hosts the Sensor Proxy Service.</description>
 </las2peerNode>

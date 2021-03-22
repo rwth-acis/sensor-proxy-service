@@ -1,10 +1,10 @@
-/template_project/output/
-/template_project/export/
+/sensor_proxy_service/output/
+/sensor_proxy_service/export/
 /node-storage/
 /.las2peer/
 /tmp/
 /log/
-/template_project/log/
+/sensor_proxy_service/log/
 /lib/
 /etc/ivy/ivy.jar
 /service/
