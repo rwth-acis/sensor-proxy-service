@@ -1,0 +1,2 @@
+rootProject.name = 'sensor-proxy-service'
+include('sensor_proxy_service')
