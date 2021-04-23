@@ -20,7 +20,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
-import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
 
 // TODO Describe your own service
@@ -64,9 +63,7 @@ public class SensorProxyService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
 	public Response getTemplate() {
-		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-		String name = userAgent.getLoginName();
-		return Response.ok().entity(name).build();
+		return Response.ok("Excellent.").build();
 	}
 
 	/**
