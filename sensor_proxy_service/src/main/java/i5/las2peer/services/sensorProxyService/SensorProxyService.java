@@ -1,11 +1,17 @@
 package i5.las2peer.services.sensorProxyService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,19 +27,15 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
+import net.minidev.json.JSONObject;
 
-// TODO Describe your own service
 /**
- * las2peer-Template-Service
+ * sensor-proxy-service
  * 
- * This is a template for a very basic las2peer service that uses the las2peer WebConnector for RESTful access to it.
- * 
- * Note: If you plan on using Swagger you should adapt the information below in the SwaggerDefinition annotation to suit
- * your project. If you do not intend to provide a Swagger documentation of your service API, the entire Api and
- * SwaggerDefinition annotation should be removed.
+ * The Sensor Proxy Service serves to facilitate communication between the sensor app (Moodmetric) and
+ * a designated Learning Records Store. 
  * 
  */
-// TODO Adjust the following configuration
 @Api
 @SwaggerDefinition(
 		info = @Info(
@@ -43,9 +45,12 @@ import io.swagger.annotations.SwaggerDefinition;
 				contact = @Contact(
 						name = "Boris Jovanovic",
 						email = "jovanovic.boris@rwth-aachen.de")))
-@ServicePath("/template")
-// TODO Your own service class
+@ServicePath("/sensorProxy")
 public class SensorProxyService extends RESTService {
+	// TODO: Put this in a environment variable
+	private String lrsEndpoint = "https://lrs.tech4comp.dbis.rwth-aachen.de/data/xAPI/statements";
+	private String lrsClientAuth = "Basic NGU3Zjg5NTZiODVkYzc2MzBkNTJlYzdiMDkzOGJlYmZmOGM2ZDdlYToyODIwMGQ1MTUzYTUyZGY1MDcwZmI3OTJiNTA4NTg3NjljZjFlMWZl";
+	
 
 	/**
 	 * Template of a get function.
@@ -69,25 +74,57 @@ public class SensorProxyService extends RESTService {
 	/**
 	 * Template of a post function.
 	 * 
-	 * @param myInput The post input the user will provide.
+	 * @param dataJSON The post input the user will provide.
 	 * @return Returns an HTTP response with plain text string content derived from the path input param.
 	 */
 	@POST
-	@Path("/post/{input}")
+	@Path("/sendStatement")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
+					message = "Statement has been sent to the LRS.") })
 	@ApiOperation(
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
-	public Response postTemplate(@PathParam("input") String myInput) {
+	public Response sendStatementsToLRS(JSONObject dataJSON) {
+		try {
+			URL lrsURL = new URL(lrsEndpoint);
+			HttpURLConnection connection =  (HttpURLConnection) lrsURL.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+			connection.setRequestProperty("X-Experience-API-Version", "1.0.3");
+			connection.setRequestProperty("Authorization", lrsClientAuth);
+			connection.setDoOutput(true);
+			
+			
+			try(OutputStream os = connection.getOutputStream()) {
+			    byte[] input = dataJSON.toJSONString().getBytes("utf-8");
+			    os.write(input, 0, input.length);			
+			}
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
+		    StringBuilder responseString = new StringBuilder();
+		    String responseLine = null;
+		    while ((responseLine = br.readLine()) != null) {
+		    	responseString.append(responseLine.trim());
+		    }
+		    System.out.println(responseString.toString());
+		    
+		    return Response.ok(responseString.toString()).build();
+			
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		String returnString = "";
-		returnString += "Input " + myInput;
+		returnString += "Input " + dataJSON.toJSONString();
 		return Response.ok().entity(returnString).build();
 	}
-
-	// TODO your own service methods, e. g. for RMI
 
 }
