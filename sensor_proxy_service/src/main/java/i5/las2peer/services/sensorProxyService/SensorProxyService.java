@@ -27,7 +27,8 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
-import net.minidev.json.JSONObject;
+
+import org.json.JSONObject;
 
 /**
  * sensor-proxy-service
@@ -51,31 +52,13 @@ public class SensorProxyService extends RESTService {
 	private String lrsEndpoint = "https://lrs.tech4comp.dbis.rwth-aachen.de/data/xAPI/statements";
 	private String lrsClientAuth = "Basic NGU3Zjg5NTZiODVkYzc2MzBkNTJlYzdiMDkzOGJlYmZmOGM2ZDdlYToyODIwMGQ1MTUzYTUyZGY1MDcwZmI3OTJiNTA4NTg3NjljZjFlMWZl";
 	
-
+	
 	/**
-	 * Template of a get function.
+	 * Main functionality function. Receives data in JSON form from app,
+	 * makes xAPI-Statements from it and sends it on to the LRS.
 	 * 
-	 * @return Returns an HTTP response with the username as string content.
-	 */
-	@GET
-	@Path("/get")
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "REPLACE THIS WITH YOUR NOTES TO THE FUNCTION")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
-	public Response getTemplate() {
-		return Response.ok("Excellent.").build();
-	}
-
-	/**
-	 * Template of a post function.
-	 * 
-	 * @param dataJSON The post input the user will provide.
-	 * @return Returns an HTTP response with plain text string content derived from the path input param.
+	 * @param dataJSON The data in JSON form.
+	 * @return Returns an HTTP response confirming a successful post to the LRS.
 	 */
 	@POST
 	@Path("/sendStatement")
@@ -86,44 +69,55 @@ public class SensorProxyService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "Statement has been sent to the LRS.") })
 	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "Example method that returns a phrase containing the received input.")
-	public Response sendStatementsToLRS(JSONObject dataJSON) {
-		try {
-			URL lrsURL = new URL(lrsEndpoint);
-			HttpURLConnection connection =  (HttpURLConnection) lrsURL.openConnection();
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-			connection.setRequestProperty("X-Experience-API-Version", "1.0.3");
-			connection.setRequestProperty("Authorization", lrsClientAuth);
-			connection.setDoOutput(true);
-			
-			
-			try(OutputStream os = connection.getOutputStream()) {
-			    byte[] input = dataJSON.toJSONString().getBytes("utf-8");
-			    os.write(input, 0, input.length);			
+			value = "Send statement to LRS",
+			notes = "Receives data in JSON form from app, makes xAPI-Statements from it and sends it on to the LRS.")
+	public Response sendStatementsToLRS(net.minidev.json.JSONObject dataJSON) {
+		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
+		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
+		
+		StatementGenerator generator = new StatementGenerator();
+		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
+		
+		if (statement == null) {
+			return Response.status(400).entity("Wrong data formulation").build();
+		}
+		else {
+			try {
+				URL lrsURL = new URL(lrsEndpoint);
+				HttpURLConnection connection =  (HttpURLConnection) lrsURL.openConnection();
+				connection.setRequestMethod("POST");
+				connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+				connection.setRequestProperty("X-Experience-API-Version", "1.0.3");
+				connection.setRequestProperty("Authorization", lrsClientAuth);
+				connection.setDoOutput(true);
+				
+				
+				try(OutputStream os = connection.getOutputStream()) {
+				    byte[] input = statement.toString().getBytes("utf-8");
+				    os.write(input, 0, input.length);			
+				}
+				
+				BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
+			    StringBuilder responseString = new StringBuilder();
+			    String responseLine = null;
+			    while ((responseLine = br.readLine()) != null) {
+			    	responseString.append(responseLine.trim());
+			    }
+			    System.out.println(responseString.toString());
+			    
+			    return Response.ok(responseString.toString()).build();
+				
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-		    StringBuilder responseString = new StringBuilder();
-		    String responseLine = null;
-		    while ((responseLine = br.readLine()) != null) {
-		    	responseString.append(responseLine.trim());
-		    }
-		    System.out.println(responseString.toString());
-		    
-		    return Response.ok(responseString.toString()).build();
-			
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
-		String returnString = "";
-		returnString += "Input " + dataJSON.toJSONString();
+		
+		String returnString = "Input " + statement.toString();
 		return Response.ok().entity(returnString).build();
 	}
 
