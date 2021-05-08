@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import i5.las2peer.api.Context;
+import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
@@ -82,38 +83,41 @@ public class SensorProxyService extends RESTService {
 			return Response.status(400).entity("Wrong data formulation").build();
 		}
 		else {
-			try {
-				URL lrsURL = new URL(lrsEndpoint);
-				HttpURLConnection connection =  (HttpURLConnection) lrsURL.openConnection();
-				connection.setRequestMethod("POST");
-				connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-				connection.setRequestProperty("X-Experience-API-Version", "1.0.3");
-				connection.setRequestProperty("Authorization", lrsClientAuth);
-				connection.setDoOutput(true);
-				
-				
-				try(OutputStream os = connection.getOutputStream()) {
-				    byte[] input = statement.toString().getBytes("utf-8");
-				    os.write(input, 0, input.length);			
-				}
-				
-				BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-			    StringBuilder responseString = new StringBuilder();
-			    String responseLine = null;
-			    while ((responseLine = br.readLine()) != null) {
-			    	responseString.append(responseLine.trim());
-			    }
-			    System.out.println(responseString.toString());
-			    
-			    return Response.ok(responseString.toString()).build();
-				
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			try {
+//				URL lrsURL = new URL(lrsEndpoint);
+//				HttpURLConnection connection =  (HttpURLConnection) lrsURL.openConnection();
+//				connection.setRequestMethod("POST");
+//				connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+//				connection.setRequestProperty("X-Experience-API-Version", "1.0.3");
+//				connection.setRequestProperty("Authorization", lrsClientAuth);
+//				connection.setDoOutput(true);
+//				
+//				
+//				try(OutputStream os = connection.getOutputStream()) {
+//				    byte[] input = statement.toString().getBytes("utf-8");
+//				    os.write(input, 0, input.length);			
+//				}
+//				
+//				BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
+//			    StringBuilder responseString = new StringBuilder();
+//			    String responseLine = null;
+//			    while ((responseLine = br.readLine()) != null) {
+//			    	responseString.append(responseLine.trim());
+//			    }
+//			    System.out.println(responseString.toString());
+//			    
+//			    return Response.ok(responseString.toString()).build();
+//				
+//			} catch (MalformedURLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			
+			String eventMessage = statement.toString() + "*" + dataJSON.getAsString("userID");
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
 		}
 		
 		
