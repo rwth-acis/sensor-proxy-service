@@ -81,6 +81,7 @@ public class SensorProxyService extends RESTService {
 		else {			
 			String eventMessage = statement.toString() + "*" + dataJSON.getAsString("userID");
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, properDataJSON.toString());
 		}
 		
 		
