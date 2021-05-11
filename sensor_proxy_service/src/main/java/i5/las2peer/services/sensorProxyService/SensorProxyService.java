@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -19,6 +20,8 @@ import javax.ws.rs.core.Response;
 import i5.las2peer.api.Context;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.UserAgent;
+import i5.las2peer.classLoaders.Logger;
+import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import io.swagger.annotations.Api;
@@ -48,7 +51,12 @@ import org.json.JSONObject;
 						name = "Boris Jovanovic",
 						email = "jovanovic.boris@rwth-aachen.de")))
 @ServicePath("/sensorProxy")
-public class SensorProxyService extends RESTService {	
+public class SensorProxyService extends RESTService {
+	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
+	
+	public SensorProxyService() {
+		L2pLogger.setGlobalConsoleLevel(Level.INFO);
+	}
 	
 	/**
 	 * Main functionality function. Receives data in JSON form from app,
@@ -69,6 +77,7 @@ public class SensorProxyService extends RESTService {
 			value = "Send statement to LRS",
 			notes = "Receives data in JSON form from app, makes xAPI-Statements from it and sends it on to the LRS.")
 	public Response sendStatementsToLRS(net.minidev.json.JSONObject dataJSON) {
+		logger.info("Received request.");
 		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
 		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
 		
@@ -76,16 +85,19 @@ public class SensorProxyService extends RESTService {
 		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
 		
 		if (statement == null) {
+			logger.warning("Format of request data is wrong.");
 			return Response.status(400).entity("Wrong data formulation").build();
 		}
 		else {			
 			String eventMessage = statement.toString() + "*" + dataJSON.getAsString("userID");
+			logger.info("Forwarding statement to MobSOS.");
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, properDataJSON.toString());
 		}
 		
 		
 		String returnString = "Input " + statement.toString();
+		logger.info("Request response is: " + returnString);
 		return Response.ok().entity(returnString).build();
 	}
 
