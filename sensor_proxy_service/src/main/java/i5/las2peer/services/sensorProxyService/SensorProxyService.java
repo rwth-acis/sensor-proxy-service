@@ -68,7 +68,7 @@ public class SensorProxyService extends RESTService {
 	@POST
 	@Path("/sendStatement")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
@@ -86,19 +86,29 @@ public class SensorProxyService extends RESTService {
 		
 		if (statement == null) {
 			logger.warning("Format of request data is wrong.");
-			return Response.status(400).entity("Wrong data formulation").build();
+			String returnString = "{\"msg\": \"Wrong data formulation.\"}";
+			return Response
+					.status(Response.Status.BAD_REQUEST)
+					.entity(returnString)
+					.type(MediaType.APPLICATION_JSON)
+					.build();
 		}
 		else {			
 			String eventMessage = statement.toString() + "*" + dataJSON.getAsString("userID");
-			logger.info("Forwarding statement to MobSOS.");
+			logger.info("Created statement: " + statement.toString());
+			logger.info("Forwarding statement to MobSOS with token: " + dataJSON.getAsString("userID"));
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, properDataJSON.toString());
 		}
 		
 		
-		String returnString = "Input " + statement.toString();
+		String returnString = "{\"msg\": \"Statement succesfully created.\"}";
 		logger.info("Request response is: " + returnString);
-		return Response.ok().entity(returnString).build();
+		return Response
+				.status(Response.Status.OK)
+				.entity(returnString)
+				.type(MediaType.APPLICATION_JSON)
+				.build();
 	}
 
 }
