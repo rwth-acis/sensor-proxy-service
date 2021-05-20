@@ -102,7 +102,7 @@ public class SensorProxyService extends RESTService {
 		}
 		
 		
-		String returnString = "{\"msg\": \"Statement succesfully created.\"}";
+		String returnString = "{\"msg\": \"Statement successfully created.\"}";
 		logger.info("Request response is: " + returnString);
 		return Response
 				.status(Response.Status.OK)
