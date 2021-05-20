@@ -114,6 +114,10 @@ public class StatementGenerator {
 		String rawKey = keyCommonPart + "/rawMeasurement";
 		JSONArray rawVal = dataJSON.getJSONArray("rawMeasurement");
 		extensionsJSON.put(rawKey, rawVal);
+		
+		String avgKey = keyCommonPart + "/aggregatedArrayData";
+		JSONObject avgVal = dataJSON.getJSONObject("aggregatedArrayData");
+		extensionsJSON.put(avgKey, avgVal);
 
 		contextJSON.put("extensions", extensionsJSON);
 		return contextJSON;
