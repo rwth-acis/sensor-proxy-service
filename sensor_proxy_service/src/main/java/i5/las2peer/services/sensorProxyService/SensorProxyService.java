@@ -32,6 +32,7 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -93,8 +94,14 @@ public class SensorProxyService extends RESTService {
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		}
-		else {			
-			String eventMessage = statement.toString() + "*" + dataJSON.getAsString("userID");
+		else {
+			JSONObject msg = new JSONObject();
+			msg.put("statement", statement);
+			JSONArray tokens = new JSONArray();
+			tokens.put(dataJSON.getAsString("userID"));
+			msg.put("tokens", tokens);
+
+			String eventMessage = msg.toString();
 			logger.info("Created statement: " + statement.toString());
 			logger.info("Forwarding statement to MobSOS with token: " + dataJSON.getAsString("userID"));
 			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
