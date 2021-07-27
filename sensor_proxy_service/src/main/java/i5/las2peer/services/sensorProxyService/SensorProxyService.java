@@ -1,17 +1,27 @@
 package i5.las2peer.services.sensorProxyService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.logging.Level;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import i5.las2peer.api.Context;
+import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.api.security.UserAgent;
+import i5.las2peer.classLoaders.Logger;
+import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
 import io.swagger.annotations.Api;
@@ -22,18 +32,16 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 
-// TODO Describe your own service
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 /**
- * las2peer-Template-Service
+ * sensor-proxy-service
  * 
- * This is a template for a very basic las2peer service that uses the las2peer WebConnector for RESTful access to it.
- * 
- * Note: If you plan on using Swagger you should adapt the information below in the SwaggerDefinition annotation to suit
- * your project. If you do not intend to provide a Swagger documentation of your service API, the entire Api and
- * SwaggerDefinition annotation should be removed.
+ * The Sensor Proxy Service serves to facilitate communication between the sensor app (Moodmetric) and
+ * a designated Learning Records Store. 
  * 
  */
-// TODO Adjust the following configuration
 @Api
 @SwaggerDefinition(
 		info = @Info(
@@ -43,51 +51,71 @@ import io.swagger.annotations.SwaggerDefinition;
 				contact = @Contact(
 						name = "Boris Jovanovic",
 						email = "jovanovic.boris@rwth-aachen.de")))
-@ServicePath("/template")
-// TODO Your own service class
+@ServicePath("/sensorProxy")
 public class SensorProxyService extends RESTService {
-
-	/**
-	 * Template of a get function.
-	 * 
-	 * @return Returns an HTTP response with the username as string content.
-	 */
-	@GET
-	@Path("/get")
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "REPLACE THIS WITH YOUR NOTES TO THE FUNCTION")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
-	public Response getTemplate() {
-		return Response.ok("Excellent.").build();
+	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
+	
+	public SensorProxyService() {
+		L2pLogger.setGlobalConsoleLevel(Level.INFO);
 	}
-
+	
 	/**
-	 * Template of a post function.
+	 * Main functionality function. Receives data in JSON form from app,
+	 * makes xAPI-Statements from it and forwards them to MobSOS.
 	 * 
-	 * @param myInput The post input the user will provide.
-	 * @return Returns an HTTP response with plain text string content derived from the path input param.
+	 * @param dataJSON The data in JSON form.
+	 * @return Returns an HTTP response confirming a successful post to the LRS.
 	 */
 	@POST
-	@Path("/post/{input}")
-	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/sendStatement")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
+					message = "Statement has been sent to the LRS.") })
 	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "Example method that returns a phrase containing the received input.")
-	public Response postTemplate(@PathParam("input") String myInput) {
-		String returnString = "";
-		returnString += "Input " + myInput;
-		return Response.ok().entity(returnString).build();
-	}
+			value = "Send statement to LRS",
+			notes = "Receives data in JSON form from app, makes xAPI-Statements from it and sends it on to the LRS.")
+	public Response sendStatementsToLRS(net.minidev.json.JSONObject dataJSON) {
+		logger.info("Received request.");
+		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
+		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
+		
+		StatementGenerator generator = new StatementGenerator();
+		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
+		
+		if (statement == null) {
+			logger.warning("Format of request data is wrong.");
+			String returnString = "{\"msg\": \"Wrong data formulation.\"}";
+			return Response
+					.status(Response.Status.BAD_REQUEST)
+					.entity(returnString)
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		}
+		else {
+			JSONObject msg = new JSONObject();
+			msg.put("statement", statement);
+			JSONArray tokens = new JSONArray();
+			tokens.put(dataJSON.getAsString("userID"));
+			msg.put("tokens", tokens);
 
-	// TODO your own service methods, e. g. for RMI
+			String eventMessage = msg.toString();
+			logger.info("Created statement: " + statement.toString());
+			logger.info("Forwarding statement to MobSOS with token: " + dataJSON.getAsString("userID"));
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
+			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, properDataJSON.toString());
+		}
+		
+		
+		String returnString = "{\"msg\": \"Statement successfully created.\"}";
+		logger.info("Request response is: " + returnString);
+		return Response
+				.status(Response.Status.OK)
+				.entity(returnString)
+				.type(MediaType.APPLICATION_JSON)
+				.build();
+	}
 
 }
