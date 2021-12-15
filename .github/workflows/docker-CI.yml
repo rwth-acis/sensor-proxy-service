@@ -22,6 +22,6 @@ jobs:
         DOCKER_PW: ${{ secrets.DOCKER_PW }}
       run: |
         docker login -u $DOCKER_USERNAME -p $DOCKER_PW registry.tech4comp.dbis.rwth-aachen.de
-        docker push registry.tech4comp.dbis.rwth-aachen.de/rwthacis/-sensor-proxy-service:${{ steps.extract_branch.outputs.branch }} 
+        docker push registry.tech4comp.dbis.rwth-aachen.de/rwthacis/sensor-proxy-service:${{ steps.extract_branch.outputs.branch }} 
         
         
