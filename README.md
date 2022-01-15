@@ -14,7 +14,7 @@ For documentation on the las2peer service API, please refer to the [wiki](https:
 
 ### Java
 
-las2peer uses **Java 14**.
+las2peer uses **Java 17**.
 
 ### Build Dependencies
 
