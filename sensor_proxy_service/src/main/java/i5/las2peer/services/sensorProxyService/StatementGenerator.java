@@ -130,6 +130,6 @@ public class StatementGenerator {
 	}
 
 	private boolean isMoodmetric(JSONObject dataJSON) {
-		return dataJSON.getJSONArray("rawMeasurement").isEmpty();
+		return dataJSON.has("rawMeasurement") && !dataJSON.getJSONArray("rawMeasurement").isEmpty();
 	}
 }
