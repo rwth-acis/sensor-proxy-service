@@ -1,39 +1,22 @@
 package i5.las2peer.services.sensorProxyService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
+import i5.las2peer.api.Context;
+import i5.las2peer.api.logging.MonitoringEvent;
+import i5.las2peer.logging.L2pLogger;
+import i5.las2peer.restMapper.RESTService;
+import i5.las2peer.restMapper.annotations.ServicePath;
+import io.swagger.annotations.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import i5.las2peer.api.Context;
-import i5.las2peer.api.logging.MonitoringEvent;
-import i5.las2peer.api.security.UserAgent;
-import i5.las2peer.classLoaders.Logger;
-import i5.las2peer.logging.L2pLogger;
-import i5.las2peer.restMapper.RESTService;
-import i5.las2peer.restMapper.annotations.ServicePath;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Contact;
-import io.swagger.annotations.Info;
-import io.swagger.annotations.SwaggerDefinition;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.net.HttpURLConnection;
+import java.util.logging.Level;
 
 /**
  * sensor-proxy-service
@@ -55,9 +38,7 @@ import org.json.JSONObject;
 public class SensorProxyService extends RESTService {
 	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
 	
-	public SensorProxyService() {
-		L2pLogger.setGlobalConsoleLevel(Level.INFO);
-	}
+	public SensorProxyService() {L2pLogger.setGlobalConsoleLevel(Level.INFO);}
 	
 	/**
 	 * Main functionality function. Receives data in JSON form from app,
@@ -83,8 +64,11 @@ public class SensorProxyService extends RESTService {
 		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
 		
 		StatementGenerator generator = new StatementGenerator();
+		InfluxWriter writer = new InfluxWriter();
+		writer.writeData(properDataJSON);
+
 		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
-		
+
 		if (statement == null) {
 			logger.warning("Format of request data is wrong.");
 			String returnString = "{\"msg\": \"Wrong data formulation.\"}";
@@ -117,5 +101,4 @@ public class SensorProxyService extends RESTService {
 				.type(MediaType.APPLICATION_JSON)
 				.build();
 	}
-
 }
