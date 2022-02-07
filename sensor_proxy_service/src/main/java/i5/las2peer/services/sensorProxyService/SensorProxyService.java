@@ -62,13 +62,17 @@ public class SensorProxyService extends RESTService {
 		logger.info("Received request.");
 		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
 		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
-		
-		StatementGenerator generator = new StatementGenerator();
+
+		// TODO: check if valid JSON
+
 		InfluxWriter writer = new InfluxWriter();
 		writer.writeData(properDataJSON);
+		writer.close();
 
+		StatementGenerator generator = new StatementGenerator();
 		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
 
+		// TODO: only if evaluated ?
 		if (statement == null) {
 			logger.warning("Format of request data is wrong.");
 			String returnString = "{\"msg\": \"Wrong data formulation.\"}";

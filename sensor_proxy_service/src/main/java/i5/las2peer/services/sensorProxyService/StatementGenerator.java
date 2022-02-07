@@ -107,24 +107,6 @@ public class StatementGenerator {
 		JSONArray moodEvalVal = dataJSON.getJSONArray("moodEvaluation");
 		extensionsJSON.put(moodEvalKey, moodEvalVal);
 
-		if (isMoodmetric(dataJSON)) {
-			String moodmetricKey = keyCommonPart + "/moodmetricMeasurement";
-			JSONArray moodmetricVal = dataJSON.getJSONArray("moodmetricMeasurement");
-			extensionsJSON.put(moodmetricKey, moodmetricVal);
-
-			String rawKey = keyCommonPart + "/rawMeasurement";
-			JSONArray rawVal = dataJSON.getJSONArray("rawMeasurement");
-			extensionsJSON.put(rawKey, rawVal);
-
-			String avgKey = keyCommonPart + "/aggregatedArrayData";
-			JSONObject avgVal = dataJSON.getJSONObject("aggregatedArrayData");
-			extensionsJSON.put(avgKey, avgVal);
-		} else {
-			String bitalinoKey = keyCommonPart + "/bitalinoMeasurement";
-			JSONArray bitalinoVal = dataJSON.getJSONArray("bitalinoMeasurement");
-			extensionsJSON.put(bitalinoKey, bitalinoVal);
-		}
-
 		contextJSON.put("extensions", extensionsJSON);
 		return contextJSON;
 	}
