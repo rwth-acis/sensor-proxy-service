@@ -116,8 +116,4 @@ public class StatementGenerator {
 		contextJSON.put("extensions", extensionsJSON);
 		return contextJSON;
 	}
-
-	private boolean isMoodmetric(JSONObject dataJSON) {
-		return dataJSON.has("rawMeasurement") && !dataJSON.getJSONArray("rawMeasurement").isEmpty();
-	}
 }
