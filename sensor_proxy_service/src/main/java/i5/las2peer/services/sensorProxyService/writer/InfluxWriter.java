@@ -1,6 +1,5 @@
-package i5.las2peer.services.sensorProxyService;
+package i5.las2peer.services.sensorProxyService.writer;
 
-import com.google.gson.Gson;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.WriteApiBlocking;
@@ -13,7 +12,6 @@ import i5.las2peer.services.sensorProxyService.pojo.bitalino.BitalinoMeasurement
 import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricData;
 import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricMeasurement;
 import i5.las2peer.services.sensorProxyService.pojo.moodmetric.RawMeasurement;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,33 +41,15 @@ public class InfluxWriter {
     }
 
     public void close() {
-        logger.info("close connection");
+        logger.info("Closing connection..");
         this.influxDBClient.close();
     }
 
-    public void writeData(JSONObject payload) {
-        try {
-            if (isMoodmetric(payload)) {
-                logger.info("received moodmetric data");
-                Gson gson = new Gson();
-                MoodmetricData moodmetricData = gson.fromJson(payload.toString(), MoodmetricData.class);
-                this.handleMoodmetric(moodmetricData);
-            } else {
-                logger.info("received bitalino data");
-                Gson gson = new Gson();
-                BitalinoData bitalinoData = gson.fromJson(payload.toString(), BitalinoData.class);
-                this.handleBitalino(bitalinoData);
-            }
-        } catch (Exception e) {
-            logger.severe(e.toString());
-        }
-    }
-
-    private void handleMoodmetric(MoodmetricData moodmetricData) {
+    public void writeMoodmetric(MoodmetricData moodmetricData) {
         String userID = this.getIDfromMail(moodmetricData.getUserID());
 
         List<Point> dataPoints = new ArrayList<>();
-        logger.info("collect data...");
+        logger.info("Collect data...");
         for (MoodmetricMeasurement moodmetricMeasurement : moodmetricData.getMoodmetricMeasurement()) {
             Long timestamp = moodmetricMeasurement.getT();
             Point mmPoint = Point.measurement(userID)
@@ -94,16 +74,16 @@ public class InfluxWriter {
             dataPoints.add(rawPoint);
         }
 
-        logger.info("write data to db...");
+        logger.info("Write data to db...");
         this.writeApi.writePoints(dataPoints);
-        logger.info("wrote " + dataPoints.size() + " entries");
+        logger.info("Wrote " + dataPoints.size() + " entries");
     }
 
-    private void handleBitalino(BitalinoData bitalinoData) {
+    public void writeBitalino(BitalinoData bitalinoData) {
         String userID = this.getIDfromMail(bitalinoData.getUserID());
 
         List<Point> dataPoints = new ArrayList<>();
-        logger.info("collect data...");
+        logger.info("Collect data...");
         for (BitalinoMeasurement bitalinoMeasurement : bitalinoData.getBitalinoMeasurement()) {
             Point bitalinoPoint = Point.measurement(userID)
                     .addField("s1", bitalinoMeasurement.getS1())
@@ -116,16 +96,12 @@ public class InfluxWriter {
             dataPoints.add(bitalinoPoint);
         }
 
-        logger.info("write data to db...");
+        logger.info("Write data to db...");
         this.writeApi.writePoints(dataPoints);
-        logger.info("wrote " + dataPoints.size() + " entries");
+        logger.info("Wrote " + dataPoints.size() + " entries");
     }
 
     private String getIDfromMail(String mail) {
         return mail.split("@")[0];
-    }
-
-    private boolean isMoodmetric(JSONObject dataJSON) {
-        return dataJSON.has("rawMeasurement") && !dataJSON.getJSONArray("rawMeasurement").isEmpty();
     }
 }

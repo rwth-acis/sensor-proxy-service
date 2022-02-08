@@ -1,13 +1,12 @@
 package i5.las2peer.services.sensorProxyService.pojo.moodmetric;
 
 import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
+import i5.las2peer.services.sensorProxyService.pojo.SensorData;
 
 import java.util.List;
 
-public class MoodmetricData {
-    private String userID;
+public class MoodmetricData extends SensorData {
     private List<MoodmetricMeasurement> moodmetricMeasurement;
-    private List<MoodEvaluation> moodEvaluation;
     private List<RawMeasurement> rawMeasurement;
     private AggregatedArrayData aggregatedArrayData;
 
@@ -19,28 +18,12 @@ public class MoodmetricData {
         this.aggregatedArrayData = aggregatedArrayData;
     }
 
-    public String getUserID() {
-        return userID;
-    }
-
-    public void setUserID(String userID) {
-        this.userID = userID;
-    }
-
     public List<MoodmetricMeasurement> getMoodmetricMeasurement() {
         return moodmetricMeasurement;
     }
 
     public void setMoodmetricMeasurement(List<MoodmetricMeasurement> moodmetricMeasurement) {
         this.moodmetricMeasurement = moodmetricMeasurement;
-    }
-
-    public List<MoodEvaluation> getMoodEvaluation() {
-        return moodEvaluation;
-    }
-
-    public void setMoodEvaluation(List<MoodEvaluation> moodEvaluation) {
-        this.moodEvaluation = moodEvaluation;
     }
 
     public List<RawMeasurement> getRawMeasurement() {
