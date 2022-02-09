@@ -81,8 +81,10 @@ public class SensorProxyService extends RESTService {
 				// write to influxdb
 				writer.writeMoodmetric(moodmetricData);
 
-				// write to mobSOS
-				mobSOSWriter.write(moodmetricData, properDataJSON);
+				// write to mobSOS if evaluation is provided
+				if (moodmetricData.getMoodEvaluation().size() != 0) {
+					mobSOSWriter.write(moodmetricData, properDataJSON);
+				}
 			} else {
 				logger.info("Received bitalino data");
 				BitalinoData bitalinoData = gson.fromJson(dataJSON.toString(), BitalinoData.class);
@@ -90,8 +92,10 @@ public class SensorProxyService extends RESTService {
 				// write to influxdb
 				writer.writeBitalino(bitalinoData);
 
-				// write to mobSOS
-				mobSOSWriter.write(bitalinoData, properDataJSON);
+				// write to mobSOS if evaluation is provided
+				if (bitalinoData.getMoodEvaluation().size() != 0) {
+					mobSOSWriter.write(bitalinoData, properDataJSON);
+				}
 			}
 			writer.close();
 		} catch (JsonSyntaxException jse) {

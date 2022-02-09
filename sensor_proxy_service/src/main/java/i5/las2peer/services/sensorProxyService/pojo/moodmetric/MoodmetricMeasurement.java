@@ -3,10 +3,10 @@ package i5.las2peer.services.sensorProxyService.pojo.moodmetric;
 public class MoodmetricMeasurement {
     private Integer mv;
     private Integer i;
-    private Integer a;
+    private Double a;
     private long t;
 
-    public MoodmetricMeasurement(Integer mv, Integer i, Integer a, long t) {
+    public MoodmetricMeasurement(Integer mv, Integer i, Double a, long t) {
         this.mv = mv;
         this.i = i;
         this.a = a;
@@ -29,11 +29,11 @@ public class MoodmetricMeasurement {
         this.i = i;
     }
 
-    public Integer getA() {
+    public Double getA() {
         return a;
     }
 
-    public void setA(Integer a) {
+    public void setA(Double a) {
         this.a = a;
     }
 

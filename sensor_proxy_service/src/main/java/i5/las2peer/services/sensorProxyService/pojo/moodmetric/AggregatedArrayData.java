@@ -1,13 +1,13 @@
 package i5.las2peer.services.sensorProxyService.pojo.moodmetric;
 
 public class AggregatedArrayData {
-    private Integer mv;
-    private Integer i;
-    private Integer a;
-    private Integer r;
+    private Double mv;
+    private Double i;
+    private Double a;
+    private Double r;
     private String mk;
 
-    public AggregatedArrayData(Integer mv, Integer i, Integer a, Integer r, String mk) {
+    public AggregatedArrayData(Double mv, Double i, Double a, Double r, String mk) {
         this.mv = mv;
         this.i = i;
         this.a = a;
@@ -15,35 +15,35 @@ public class AggregatedArrayData {
         this.mk = mk;
     }
 
-    public Integer getMv() {
+    public Double getMv() {
         return mv;
     }
 
-    public void setMv(Integer mv) {
+    public void setMv(Double mv) {
         this.mv = mv;
     }
 
-    public Integer getI() {
+    public Double getI() {
         return i;
     }
 
-    public void setI(Integer i) {
+    public void setI(Double i) {
         this.i = i;
     }
 
-    public Integer getA() {
+    public Double getA() {
         return a;
     }
 
-    public void setA(Integer a) {
+    public void setA(Double a) {
         this.a = a;
     }
 
-    public Integer getR() {
+    public Double getR() {
         return r;
     }
 
-    public void setR(Integer r) {
+    public void setR(Double r) {
         this.r = r;
     }
 
