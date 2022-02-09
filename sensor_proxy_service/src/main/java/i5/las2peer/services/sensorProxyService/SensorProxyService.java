@@ -44,8 +44,9 @@ public class SensorProxyService extends RESTService {
 	private final Gson gson = new Gson();
 	private final MobSOSWriter mobSOSWriter = new MobSOSWriter();
 
-
-	public SensorProxyService() {L2pLogger.setGlobalConsoleLevel(Level.INFO);}
+	public SensorProxyService() {
+		L2pLogger.setGlobalConsoleLevel(Level.INFO);
+	}
 	
 	/**
 	 * Main functionality function. Receives data in JSON form from app,
@@ -82,7 +83,7 @@ public class SensorProxyService extends RESTService {
 				writer.writeMoodmetric(moodmetricData);
 
 				// write to mobSOS if evaluation is provided
-				if (moodmetricData.getMoodEvaluation().size() != 0) {
+				if (!moodmetricData.getMoodEvaluation().isEmpty()) {
 					mobSOSWriter.write(moodmetricData, properDataJSON);
 				}
 			} else {
@@ -93,7 +94,7 @@ public class SensorProxyService extends RESTService {
 				writer.writeBitalino(bitalinoData);
 
 				// write to mobSOS if evaluation is provided
-				if (bitalinoData.getMoodEvaluation().size() != 0) {
+				if (!bitalinoData.getMoodEvaluation().isEmpty()) {
 					mobSOSWriter.write(bitalinoData, properDataJSON);
 				}
 			}

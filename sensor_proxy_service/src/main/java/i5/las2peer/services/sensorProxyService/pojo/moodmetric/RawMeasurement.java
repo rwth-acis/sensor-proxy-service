@@ -1,10 +1,10 @@
 package i5.las2peer.services.sensorProxyService.pojo.moodmetric;
 
 public class RawMeasurement {
-    private Integer r;
-    private long t;
+    private final Integer r;
+    private final Long t;
 
-    public RawMeasurement(Integer r, long t) {
+    public RawMeasurement(Integer r, Long t) {
         this.r = r;
         this.t = t;
     }
@@ -13,15 +13,7 @@ public class RawMeasurement {
         return r;
     }
 
-    public void setR(Integer r) {
-        this.r = r;
-    }
-
-    public long getT() {
+    public Long getT() {
         return t;
-    }
-
-    public void setT(long t) {
-        this.t = t;
     }
 }

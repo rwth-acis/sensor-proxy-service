@@ -28,16 +28,12 @@ public class InfluxWriter {
     private WriteApiBlocking writeApi;
 
     public InfluxWriter() {
-        try {
-            this.influxDBClient = InfluxDBClientFactory.create(
-                    INFLUXDB_HOST,
-                    INFLUXDB_TOKEN,
-                    INFLUXDB_ORG,
-                    INFLUXDB_BUCKET);
-            this.writeApi = this.influxDBClient.getWriteApiBlocking();
-        } catch (Exception e) {
-            logger.severe(e.toString());
-        }
+        this.influxDBClient = InfluxDBClientFactory.create(
+                INFLUXDB_HOST,
+                INFLUXDB_TOKEN,
+                INFLUXDB_ORG,
+                INFLUXDB_BUCKET);
+        this.writeApi = this.influxDBClient.getWriteApiBlocking();
     }
 
     public void close() {

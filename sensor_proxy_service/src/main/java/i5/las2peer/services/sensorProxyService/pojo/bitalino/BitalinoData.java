@@ -6,7 +6,7 @@ import i5.las2peer.services.sensorProxyService.pojo.SensorData;
 import java.util.List;
 
 public class BitalinoData extends SensorData {
-    private List<BitalinoMeasurement> bitalinoMeasurement;
+    private final List<BitalinoMeasurement> bitalinoMeasurement;
 
     public BitalinoData(String userID, List<BitalinoMeasurement> bitalinoMeasurement, List<MoodEvaluation> moodEvaluation) {
         this.userID = userID;
@@ -16,9 +16,5 @@ public class BitalinoData extends SensorData {
 
     public List<BitalinoMeasurement> getBitalinoMeasurement() {
         return bitalinoMeasurement;
-    }
-
-    public void setBitalinoMeasurement(List<BitalinoMeasurement> bitalinoMeasurement) {
-        this.bitalinoMeasurement = bitalinoMeasurement;
     }
 }

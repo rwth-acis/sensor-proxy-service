@@ -11,23 +11,11 @@ public abstract class SensorData {
         return userID;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
-    }
-
     public List<MoodEvaluation> getMoodEvaluation() {
         return moodEvaluation;
     }
 
-    public void setMoodEvaluation(List<MoodEvaluation> moodEvaluation) {
-        this.moodEvaluation = moodEvaluation;
-    }
-
     public String getStudyID() {
         return studyID;
-    }
-
-    public void setStudyID(String studyID) {
-        this.studyID = studyID;
     }
 }
