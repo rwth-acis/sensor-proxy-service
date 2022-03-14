@@ -1,39 +1,26 @@
 package i5.las2peer.services.sensorProxyService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.influxdb.exceptions.InfluxException;
+import i5.las2peer.logging.L2pLogger;
+import i5.las2peer.restMapper.RESTService;
+import i5.las2peer.restMapper.annotations.ServicePath;
+import i5.las2peer.services.sensorProxyService.pojo.bitalino.BitalinoData;
+import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricData;
+import i5.las2peer.services.sensorProxyService.writer.InfluxWriter;
+import i5.las2peer.services.sensorProxyService.writer.MobSOSWriter;
+import io.swagger.annotations.*;
+import org.json.JSONObject;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import i5.las2peer.api.Context;
-import i5.las2peer.api.logging.MonitoringEvent;
-import i5.las2peer.api.security.UserAgent;
-import i5.las2peer.classLoaders.Logger;
-import i5.las2peer.logging.L2pLogger;
-import i5.las2peer.restMapper.RESTService;
-import i5.las2peer.restMapper.annotations.ServicePath;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Contact;
-import io.swagger.annotations.Info;
-import io.swagger.annotations.SwaggerDefinition;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.net.HttpURLConnection;
+import java.util.logging.Level;
 
 /**
  * sensor-proxy-service
@@ -54,7 +41,9 @@ import org.json.JSONObject;
 @ServicePath("/sensorProxy")
 public class SensorProxyService extends RESTService {
 	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
-	
+	private final Gson gson = new Gson();
+	private final MobSOSWriter mobSOSWriter = new MobSOSWriter();
+
 	public SensorProxyService() {
 		L2pLogger.setGlobalConsoleLevel(Level.INFO);
 	}
@@ -81,34 +70,58 @@ public class SensorProxyService extends RESTService {
 		logger.info("Received request.");
 		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
 		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
-		
-		StatementGenerator generator = new StatementGenerator();
-		JSONObject statement = generator.createStatementFromAppData(properDataJSON);
-		
-		if (statement == null) {
-			logger.warning("Format of request data is wrong.");
-			String returnString = "{\"msg\": \"Wrong data formulation.\"}";
+
+		try {
+			InfluxWriter writer = new InfluxWriter();
+
+			// check which data is provided
+			if (properDataJSON.has("rawMeasurement") && !properDataJSON.getJSONArray("rawMeasurement").isEmpty()) {
+				logger.info("Received moodmetric data");
+				MoodmetricData moodmetricData = gson.fromJson(dataJSON.toString(), MoodmetricData.class);
+
+				// write to influxdb
+				writer.writeMoodmetric(moodmetricData);
+
+				// write to mobSOS if evaluation is provided
+				if (!moodmetricData.getMoodEvaluation().isEmpty()) {
+					mobSOSWriter.write(moodmetricData, properDataJSON);
+				}
+			} else {
+				logger.info("Received bitalino data");
+				BitalinoData bitalinoData = gson.fromJson(dataJSON.toString(), BitalinoData.class);
+
+				// write to influxdb
+				writer.writeBitalino(bitalinoData);
+
+				// write to mobSOS if evaluation is provided
+				if (!bitalinoData.getMoodEvaluation().isEmpty()) {
+					mobSOSWriter.write(bitalinoData, properDataJSON);
+				}
+			}
+			writer.close();
+		} catch (JsonSyntaxException jse) {
+			logger.severe("Format of request data is wrong:" + jse);
 			return Response
 					.status(Response.Status.BAD_REQUEST)
-					.entity(returnString)
+					.entity("{\"msg\": \"Wrong data formulation.\"}")
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		} catch (InfluxException ie) {
+			logger.severe(ie.toString());
+			return Response
+					.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity("{\"msg\": \"Error sending to influxdb.\"}")
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		} catch (Exception e) {
+			logger.severe(e.toString());
+			return Response
+					.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity("{\"msg\": \"Unknown error occurred.\"}")
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		}
-		else {
-			JSONObject msg = new JSONObject();
-			msg.put("statement", statement);
-			JSONArray tokens = new JSONArray();
-			tokens.put(dataJSON.getAsString("userID"));
-			msg.put("tokens", tokens);
 
-			String eventMessage = msg.toString();
-			logger.info("Created statement: " + statement.toString());
-			logger.info("Forwarding statement to MobSOS with token: " + dataJSON.getAsString("userID"));
-			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
-			Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, properDataJSON.toString());
-		}
-		
-		
 		String returnString = "{\"msg\": \"Statement successfully created.\"}";
 		logger.info("Request response is: " + returnString);
 		return Response
@@ -117,5 +130,4 @@ public class SensorProxyService extends RESTService {
 				.type(MediaType.APPLICATION_JSON)
 				.build();
 	}
-
 }

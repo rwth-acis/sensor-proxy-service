@@ -1,21 +1,25 @@
-package i5.las2peer.services.sensorProxyService;
+package i5.las2peer.services.sensorProxyService.writer;
 
-import org.json.JSONArray;
+import i5.las2peer.logging.L2pLogger;
+import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
+import i5.las2peer.services.sensorProxyService.pojo.SensorData;
+import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricData;
 import org.json.JSONException;
 import org.json.JSONObject;
-import i5.las2peer.logging.L2pLogger;
+
+import java.util.List;
 
 public class StatementGenerator {
 
 	private final String TECH4COMP_URI = "https://tech4comp.de/xapi";
 	private final L2pLogger log = L2pLogger.getInstance(StatementGenerator.class.getName());
 
-	public JSONObject createStatementFromAppData(JSONObject dataJSON) {
+	public JSONObject createStatementFromAppData(SensorData sensorData) {
 		JSONObject retStatement = new JSONObject();
 
 		// Add actor
 		try {
-			JSONObject actorJSON =  createActor(dataJSON.getString("userID"));
+			JSONObject actorJSON =  createActor(sensorData.getUserID());
 			retStatement.put("actor", actorJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the actor data");
@@ -24,7 +28,7 @@ public class StatementGenerator {
 
 		//Add verb
 		try {
-			JSONObject verbJSON = (isMoodmetric(dataJSON)) ? createVerb("evaluated") : createVerb("evaluated_bitalino");
+			JSONObject verbJSON = (sensorData instanceof MoodmetricData) ? createVerb("evaluated") : createVerb("evaluated_bitalino");
 			retStatement.put("verb", verbJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the verb data");
@@ -33,7 +37,7 @@ public class StatementGenerator {
 
 		//Add object
 		try {
-			JSONObject objectJSON = createObject(dataJSON.getString("studyID"));
+			JSONObject objectJSON = createObject(sensorData.getStudyID());
 			retStatement.put("object", objectJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the object data");
@@ -42,7 +46,7 @@ public class StatementGenerator {
 
 		//Add context extensions
 		try {
-			JSONObject contextJSON = createContextExtensions(dataJSON);
+			JSONObject contextJSON = createContextExtensions(sensorData);
 			retStatement.put("context", contextJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the context extension data");
@@ -97,39 +101,19 @@ public class StatementGenerator {
 		return objectJSON;
 	}
 
-	private JSONObject createContextExtensions(JSONObject dataJSON) throws JSONException {
+	private JSONObject createContextExtensions(SensorData sensorData) throws JSONException {
 		JSONObject contextJSON = new JSONObject();
 		JSONObject extensionsJSON = new JSONObject();
 
 		String keyCommonPart = TECH4COMP_URI + "/context/extensions";
 
 		String moodEvalKey = keyCommonPart + "/moodEvaluation";
-		JSONArray moodEvalVal = dataJSON.getJSONArray("moodEvaluation");
+		List<MoodEvaluation> moodEvalVal = sensorData.getMoodEvaluation();
+
+		//JSONArray moodEvalVal = dataJSON.getJSONArray("moodEvaluation");
 		extensionsJSON.put(moodEvalKey, moodEvalVal);
-
-		if (isMoodmetric(dataJSON)) {
-			String moodmetricKey = keyCommonPart + "/moodmetricMeasurement";
-			JSONArray moodmetricVal = dataJSON.getJSONArray("moodmetricMeasurement");
-			extensionsJSON.put(moodmetricKey, moodmetricVal);
-
-			String rawKey = keyCommonPart + "/rawMeasurement";
-			JSONArray rawVal = dataJSON.getJSONArray("rawMeasurement");
-			extensionsJSON.put(rawKey, rawVal);
-
-			String avgKey = keyCommonPart + "/aggregatedArrayData";
-			JSONObject avgVal = dataJSON.getJSONObject("aggregatedArrayData");
-			extensionsJSON.put(avgKey, avgVal);
-		} else {
-			String bitalinoKey = keyCommonPart + "/bitalinoMeasurement";
-			JSONArray bitalinoVal = dataJSON.getJSONArray("bitalinoMeasurement");
-			extensionsJSON.put(bitalinoKey, bitalinoVal);
-		}
 
 		contextJSON.put("extensions", extensionsJSON);
 		return contextJSON;
-	}
-
-	private boolean isMoodmetric(JSONObject dataJSON) {
-		return dataJSON.has("rawMeasurement") && !dataJSON.getJSONArray("rawMeasurement").isEmpty();
 	}
 }
