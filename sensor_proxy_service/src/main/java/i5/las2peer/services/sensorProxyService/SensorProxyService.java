@@ -1,6 +1,7 @@
 package i5.las2peer.services.sensorProxyService;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.influxdb.exceptions.InfluxException;
 import i5.las2peer.logging.L2pLogger;
@@ -41,7 +42,7 @@ import java.util.logging.Level;
 @ServicePath("/sensorProxy")
 public class SensorProxyService extends RESTService {
 	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
-	private final Gson gson = new Gson();
+	private final Gson gson = new GsonBuilder().serializeNulls().create();
 	private final MobSOSWriter mobSOSWriter = new MobSOSWriter();
 
 	public SensorProxyService() {

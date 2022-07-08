@@ -3,6 +3,7 @@ package i5.las2peer.services.sensorProxyService.pojo.bitalino;
 import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
 import i5.las2peer.services.sensorProxyService.pojo.SensorData;
 
+import java.util.Collections;
 import java.util.List;
 
 public class BitalinoData extends SensorData {
@@ -15,6 +16,6 @@ public class BitalinoData extends SensorData {
     }
 
     public List<BitalinoMeasurement> getBitalinoMeasurement() {
-        return bitalinoMeasurement;
+        return bitalinoMeasurement == null ? Collections.<BitalinoMeasurement>emptyList() : bitalinoMeasurement;
     }
 }
