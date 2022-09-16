@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.influxdb.exceptions.InfluxException;
+import i5.las2peer.api.Context;
+import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
@@ -21,6 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.HttpURLConnection;
+import java.security.MessageDigest;
 import java.util.logging.Level;
 
 /**
@@ -48,7 +51,7 @@ public class SensorProxyService extends RESTService {
 	public SensorProxyService() {
 		L2pLogger.setGlobalConsoleLevel(Level.INFO);
 	}
-	
+
 	/**
 	 * Main functionality function. Receives data in JSON form from app,
 	 * makes xAPI-Statements from it and forwards them to MobSOS.
@@ -72,8 +75,21 @@ public class SensorProxyService extends RESTService {
 		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
 		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
 
+		// Get user mail
+		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
+		String email = userAgent.getEmail();
+
 		try {
-			InfluxWriter writer = new InfluxWriter();
+			// Hash mail for db data allocation
+			MessageDigest md = MessageDigest.getInstance("SHA-384");
+			byte[] messageDigest = md.digest(email.getBytes());
+
+			StringBuilder hashMail = new StringBuilder();
+			for (byte b : messageDigest) {
+				hashMail.append(String.format("%02X", b));
+			}
+
+			InfluxWriter writer = new InfluxWriter(hashMail.toString());
 
 			// check which data is provided
 			if (properDataJSON.has("rawMeasurement") && !properDataJSON.getJSONArray("rawMeasurement").isEmpty()) {
@@ -85,7 +101,7 @@ public class SensorProxyService extends RESTService {
 
 				// write to mobSOS if evaluation is provided
 				if (!moodmetricData.getMoodEvaluation().isEmpty()) {
-					mobSOSWriter.write(moodmetricData, properDataJSON);
+					mobSOSWriter.write(moodmetricData, properDataJSON, hashMail.toString());
 				}
 			} else {
 				logger.info("Received bitalino data");
@@ -96,7 +112,7 @@ public class SensorProxyService extends RESTService {
 
 				// write to mobSOS if evaluation is provided
 				if (!bitalinoData.getMoodEvaluation().isEmpty()) {
-					mobSOSWriter.write(bitalinoData, properDataJSON);
+					mobSOSWriter.write(bitalinoData, properDataJSON, hashMail.toString());
 				}
 			}
 			writer.close();

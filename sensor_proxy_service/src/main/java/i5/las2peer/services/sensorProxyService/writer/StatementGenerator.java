@@ -14,12 +14,12 @@ public class StatementGenerator {
 	private final String TECH4COMP_URI = "https://tech4comp.de/xapi";
 	private final L2pLogger log = L2pLogger.getInstance(StatementGenerator.class.getName());
 
-	public JSONObject createStatementFromAppData(SensorData sensorData) {
+	public JSONObject createStatementFromAppData(SensorData sensorData, String userMail) {
 		JSONObject retStatement = new JSONObject();
 
 		// Add actor
 		try {
-			JSONObject actorJSON =  createActor(sensorData.getUserID());
+			JSONObject actorJSON =  createActor(userMail);
 			retStatement.put("actor", actorJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the actor data");
@@ -60,9 +60,9 @@ public class StatementGenerator {
 		JSONObject actorJSON = new JSONObject();
 
 		actorJSON.put("objectType", "Agent");
-
-		String mboxValue = "mailto:" + userEmail;
-		actorJSON.put("mbox", mboxValue);
+		JSONObject account = new JSONObject();
+		account.put("name", userEmail);
+		actorJSON.put("account", account);
 
 		return actorJSON;
 	}

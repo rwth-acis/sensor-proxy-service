@@ -24,16 +24,19 @@ public class InfluxWriter {
     private static final String INFLUXDB_ORG = System.getenv("INFLUXDB_ORG");
     private static final String INFLUXDB_BUCKET = System.getenv("INFLUXDB_BUCKET");
 
+    private final String userHash;
+
     private InfluxDBClient influxDBClient;
     private WriteApiBlocking writeApi;
 
-    public InfluxWriter() {
+    public InfluxWriter(String userHash) {
         this.influxDBClient = InfluxDBClientFactory.create(
                 INFLUXDB_HOST,
                 INFLUXDB_TOKEN,
                 INFLUXDB_ORG,
                 INFLUXDB_BUCKET);
         this.writeApi = this.influxDBClient.getWriteApiBlocking();
+        this.userHash = userHash;
     }
 
     public void close() {
@@ -42,13 +45,11 @@ public class InfluxWriter {
     }
 
     public void writeMoodmetric(MoodmetricData moodmetricData) {
-        String userID = this.getIDfromMail(moodmetricData.getUserID());
-
         List<Point> dataPoints = new ArrayList<>();
         logger.info("Collect data...");
         for (MoodmetricMeasurement moodmetricMeasurement : moodmetricData.getMoodmetricMeasurement()) {
             Long timestamp = moodmetricMeasurement.getT();
-            Point mmPoint = Point.measurement(userID)
+            Point mmPoint = Point.measurement(this.userHash)
                     .addField("instant", moodmetricMeasurement.getI())
                     .addField("acceleration", moodmetricMeasurement.getA())
                     .addField("moodmetric-score", moodmetricMeasurement.getMv())
@@ -57,14 +58,14 @@ public class InfluxWriter {
         }
 
         for (MoodEvaluation moodEvaluation : moodmetricData.getMoodEvaluation()) {
-            Point evalPoint = Point.measurement(userID)
+            Point evalPoint = Point.measurement(this.userHash)
                     .addField("eval", moodEvaluation.getMk())
                     .time(moodEvaluation.getT(), WritePrecision.MS);
             dataPoints.add(evalPoint);
         }
 
         for (RawMeasurement rawMeasurement : moodmetricData.getRawMeasurement()) {
-            Point rawPoint = Point.measurement(userID)
+            Point rawPoint = Point.measurement(this.userHash)
                     .addField("raw", rawMeasurement.getR())
                     .time(rawMeasurement.getT(), WritePrecision.MS);
             dataPoints.add(rawPoint);
@@ -76,12 +77,10 @@ public class InfluxWriter {
     }
 
     public void writeBitalino(BitalinoData bitalinoData) {
-        String userID = this.getIDfromMail(bitalinoData.getUserID());
-
         List<Point> dataPoints = new ArrayList<>();
         logger.info("Collect data...");
         for (BitalinoMeasurement bitalinoMeasurement : bitalinoData.getBitalinoMeasurement()) {
-            Point bitalinoPoint = Point.measurement(userID)
+            Point bitalinoPoint = Point.measurement(this.userHash)
                     .addField("s1", bitalinoMeasurement.getS1())
                     .addField("s2", bitalinoMeasurement.getS2())
                     .addField("s3", bitalinoMeasurement.getS3())
@@ -95,9 +94,5 @@ public class InfluxWriter {
         logger.info("Write data to db...");
         this.writeApi.writePoints(dataPoints);
         logger.info("Wrote " + dataPoints.size() + " entries");
-    }
-
-    private String getIDfromMail(String mail) {
-        return mail.split("@")[0];
     }
 }

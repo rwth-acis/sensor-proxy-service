@@ -11,9 +11,9 @@ public class MobSOSWriter {
     private final L2pLogger logger = L2pLogger.getInstance(MobSOSWriter.class.getName());
     private final StatementGenerator generator = new StatementGenerator();
 
-    public void write(SensorData sensorData, JSONObject rawPayload) {
+    public void write(SensorData sensorData, JSONObject rawPayload, String userMail) {
         // create xapi statement
-        JSONObject statement = generator.createStatementFromAppData(sensorData);
+        JSONObject statement = generator.createStatementFromAppData(sensorData, userMail);
 
         JSONObject msg = new JSONObject();
         msg.put("statement", statement);
