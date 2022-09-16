@@ -1,5 +1,6 @@
 package i5.las2peer.services.sensorProxyService.pojo;
 
+import java.util.Collections;
 import java.util.List;
 
 public abstract class SensorData {
@@ -12,7 +13,7 @@ public abstract class SensorData {
     }
 
     public List<MoodEvaluation> getMoodEvaluation() {
-        return moodEvaluation;
+        return moodEvaluation == null ? Collections.<MoodEvaluation>emptyList() : moodEvaluation;
     }
 
     public String getStudyID() {

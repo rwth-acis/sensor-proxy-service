@@ -3,6 +3,7 @@ package i5.las2peer.services.sensorProxyService.pojo.moodmetric;
 import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
 import i5.las2peer.services.sensorProxyService.pojo.SensorData;
 
+import java.util.Collections;
 import java.util.List;
 
 public class MoodmetricData extends SensorData {
@@ -19,11 +20,11 @@ public class MoodmetricData extends SensorData {
     }
 
     public List<MoodmetricMeasurement> getMoodmetricMeasurement() {
-        return moodmetricMeasurement;
+        return moodmetricMeasurement == null ? Collections.<MoodmetricMeasurement>emptyList() : moodmetricMeasurement;
     }
 
     public List<RawMeasurement> getRawMeasurement() {
-        return rawMeasurement;
+        return rawMeasurement == null ? Collections.<RawMeasurement>emptyList() : rawMeasurement;
     }
 
     public AggregatedArrayData getAggregatedArrayData() {
