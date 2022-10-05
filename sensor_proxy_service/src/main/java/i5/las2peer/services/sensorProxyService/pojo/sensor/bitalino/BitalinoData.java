@@ -1,7 +1,7 @@
-package i5.las2peer.services.sensorProxyService.pojo.bitalino;
+package i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino;
 
-import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
-import i5.las2peer.services.sensorProxyService.pojo.SensorData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.mood.MoodEvaluation;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.SensorData;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,10 +9,9 @@ import java.util.List;
 public class BitalinoData extends SensorData {
     private final List<BitalinoMeasurement> bitalinoMeasurement;
 
-    public BitalinoData(String userID, List<BitalinoMeasurement> bitalinoMeasurement, List<MoodEvaluation> moodEvaluation) {
-        this.userID = userID;
+    public BitalinoData(List<BitalinoMeasurement> bitalinoMeasurement, List<MoodEvaluation> moodEvaluations) {
         this.bitalinoMeasurement = bitalinoMeasurement;
-        this.moodEvaluation = moodEvaluation;
+        this.moodEvaluations = moodEvaluations;
     }
 
     public List<BitalinoMeasurement> getBitalinoMeasurement() {
