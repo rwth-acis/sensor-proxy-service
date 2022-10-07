@@ -11,7 +11,7 @@ public class MobSOSWriter {
     private final L2pLogger logger = L2pLogger.getInstance(MobSOSWriter.class.getName());
     private final StatementGenerator generator = new StatementGenerator();
 
-    public void write(SensorData sensorData, JSONObject rawPayload, String userMail) {
+    public void write(SensorData sensorData, net.minidev.json.JSONObject dataJSON, String userMail) {
         // create xapi statement
         JSONObject statement = generator.createStatementFromAppData(sensorData, userMail);
 
@@ -26,6 +26,6 @@ public class MobSOSWriter {
         logger.info("Forwarding statement to MobSOS with token: " + userMail);
 
         Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_1, eventMessage);
-        Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, rawPayload.toString());
+        Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_2, dataJSON.toJSONString());
     }
 }

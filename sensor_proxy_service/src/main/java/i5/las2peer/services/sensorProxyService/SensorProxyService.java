@@ -9,13 +9,12 @@ import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.logging.L2pLogger;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
-import i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino.BitalinoData;
 import i5.las2peer.services.sensorProxyService.pojo.context.ContextData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino.BitalinoData;
 import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.MoodmetricData;
 import i5.las2peer.services.sensorProxyService.writer.InfluxWriter;
 import i5.las2peer.services.sensorProxyService.writer.MobSOSWriter;
 import io.swagger.annotations.*;
-import org.json.JSONObject;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -74,8 +73,6 @@ public class SensorProxyService extends RESTService {
 			notes = "Receives data in JSON form from app, sends data to InfluxDB, makes xAPI-Statements and sends it to the LRS.")
 	public Response storeSensor(net.minidev.json.JSONObject dataJSON) {
 		logger.info("Received request.");
-		// For some reason the net.minidev.json.JSONObject has to be used as the parameter
-		JSONObject properDataJSON = new JSONObject(dataJSON.toJSONString());
 
 		// Get user mail
 		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
@@ -83,9 +80,8 @@ public class SensorProxyService extends RESTService {
 
 		try {
 			InfluxWriter writer = new InfluxWriter(hashSHA384(mail));
-
 			// check which data is provided
-			if (properDataJSON.has("rawMeasurement") && !properDataJSON.getJSONArray("rawMeasurement").isEmpty()) {
+			if (dataJSON.containsKey("rawSkinResistanceMeasurements")) {
 				logger.info("Received moodmetric data");
 				MoodmetricData moodmetricData = gson.fromJson(dataJSON.toString(), MoodmetricData.class);
 
@@ -95,7 +91,7 @@ public class SensorProxyService extends RESTService {
 				// write to mobSOS if evaluation is provided
 				if (!moodmetricData.getMoodEvaluations().isEmpty()) {
 					// mobSoS can't handle hash, so send plain mail
-					mobSOSWriter.write(moodmetricData, properDataJSON, mail);
+					mobSOSWriter.write(moodmetricData, dataJSON, mail);
 				}
 			} else {
 				logger.info("Received bitalino data");
@@ -107,7 +103,7 @@ public class SensorProxyService extends RESTService {
 				// write to mobSOS if evaluation is provided
 				if (!bitalinoData.getMoodEvaluations().isEmpty()) {
 					// mobSoS can't handle hash, so send plain mail
-					mobSOSWriter.write(bitalinoData, properDataJSON, mail);
+					mobSOSWriter.write(bitalinoData, dataJSON, mail);
 				}
 			}
 			writer.close();

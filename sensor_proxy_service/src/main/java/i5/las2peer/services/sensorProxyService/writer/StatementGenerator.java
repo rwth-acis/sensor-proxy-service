@@ -37,7 +37,7 @@ public class StatementGenerator {
 
 		//Add object
 		try {
-			JSONObject objectJSON = createObject(sensorData.getStudyID());
+			JSONObject objectJSON = createObject(sensorData.getStudyId());
 			retStatement.put("object", objectJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the object data");

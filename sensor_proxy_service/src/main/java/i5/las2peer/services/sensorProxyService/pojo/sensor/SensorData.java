@@ -8,14 +8,14 @@ import java.util.List;
 public abstract class SensorData {
 
     protected Integer version;
-    protected String studyID;
+    protected String studyId;
     protected List<MoodEvaluation> moodEvaluations;
 
     public List<MoodEvaluation> getMoodEvaluations() {
         return moodEvaluations == null ? Collections.<MoodEvaluation>emptyList() : moodEvaluations;
     }
 
-    public String getStudyID() {
-        return studyID;
+    public String getStudyId() {
+        return studyId;
     }
 }
