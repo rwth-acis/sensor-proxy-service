@@ -65,6 +65,11 @@ public class InfluxWriter {
                     .addField("approximated_mood", moodEvaluation.getMood().getName())
                     .addField("approximated_mood_valence", moodEvaluation.getMood().getValence())
                     .addField("approximated_mood_arousal", moodEvaluation.getMood().getArousal())
+                    .addField("learning_relation", moodEvaluation.getLearningRelation())
+                    .addField("problem_awareness", moodEvaluation.getHasProblemAwareness())
+                    .addField("awareness_description", moodEvaluation.getAdditionalAwarenessDescription())
+                    .addField("intervention_request", moodEvaluation.getHasInterventionRequest())
+                    .addField("intervention_description", moodEvaluation.getAdditionalInterventionDescription())
                     .time(moodEvaluation.getCreatedAt(), WritePrecision.MS);
             dataPoints.add(evalPoint);
         }
