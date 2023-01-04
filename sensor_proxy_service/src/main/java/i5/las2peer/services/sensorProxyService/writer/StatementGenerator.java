@@ -1,9 +1,9 @@
 package i5.las2peer.services.sensorProxyService.writer;
 
 import i5.las2peer.logging.L2pLogger;
-import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
-import i5.las2peer.services.sensorProxyService.pojo.SensorData;
-import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.mood.MoodEvaluation;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.SensorData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.MoodmetricData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,7 +37,7 @@ public class StatementGenerator {
 
 		//Add object
 		try {
-			JSONObject objectJSON = createObject(sensorData.getStudyID());
+			JSONObject objectJSON = createObject(sensorData.getStudyId());
 			retStatement.put("object", objectJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the object data");
@@ -108,7 +108,7 @@ public class StatementGenerator {
 		String keyCommonPart = TECH4COMP_URI + "/context/extensions";
 
 		String moodEvalKey = keyCommonPart + "/moodEvaluation";
-		List<MoodEvaluation> moodEvalVal = sensorData.getMoodEvaluation();
+		List<MoodEvaluation> moodEvalVal = sensorData.getMoodEvaluations();
 
 		//JSONArray moodEvalVal = dataJSON.getJSONArray("moodEvaluation");
 		extensionsJSON.put(moodEvalKey, moodEvalVal);

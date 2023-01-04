@@ -1,4 +1,4 @@
-package i5.las2peer.services.sensorProxyService.pojo.bitalino;
+package i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino;
 
 public class BitalinoMeasurement {
     private final Long t;

@@ -6,12 +6,13 @@ import com.influxdb.client.WriteApiBlocking;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import i5.las2peer.logging.L2pLogger;
-import i5.las2peer.services.sensorProxyService.pojo.MoodEvaluation;
-import i5.las2peer.services.sensorProxyService.pojo.bitalino.BitalinoData;
-import i5.las2peer.services.sensorProxyService.pojo.bitalino.BitalinoMeasurement;
-import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricData;
-import i5.las2peer.services.sensorProxyService.pojo.moodmetric.MoodmetricMeasurement;
-import i5.las2peer.services.sensorProxyService.pojo.moodmetric.RawMeasurement;
+import i5.las2peer.services.sensorProxyService.pojo.context.ContextData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.mood.MoodEvaluation;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino.BitalinoData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino.BitalinoMeasurement;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.MoodmetricData;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.MoodmetricMeasurement;
+import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.RawMeasurement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,30 +48,41 @@ public class InfluxWriter {
     public void writeMoodmetric(MoodmetricData moodmetricData) {
         List<Point> dataPoints = new ArrayList<>();
         logger.info("Collect data...");
-        for (MoodmetricMeasurement moodmetricMeasurement : moodmetricData.getMoodmetricMeasurement()) {
-            Long timestamp = moodmetricMeasurement.getT();
+        for (MoodmetricMeasurement moodmetricMeasurement : moodmetricData.getMoodmetricMeasurements()) {
+            Long timestamp = moodmetricMeasurement.getCreatedAt();
             Point mmPoint = Point.measurement(this.userHash)
-                    .addField("instant", moodmetricMeasurement.getI())
-                    .addField("acceleration", moodmetricMeasurement.getA())
-                    .addField("moodmetric-score", moodmetricMeasurement.getMv())
+                    .addTag("studyID", moodmetricData.getStudyId())
+                    .addField("instant", moodmetricMeasurement.getInstant())
+                    .addField("acceleration", moodmetricMeasurement.getAcceleration())
+                    .addField("moodmetric-level", moodmetricMeasurement.getLevel())
                     .time(timestamp, WritePrecision.MS);
             dataPoints.add(mmPoint);
         }
 
-        for (MoodEvaluation moodEvaluation : moodmetricData.getMoodEvaluation()) {
+        for (MoodEvaluation moodEvaluation : moodmetricData.getMoodEvaluations()) {
             Point evalPoint = Point.measurement(this.userHash)
-                    .addField("eval", moodEvaluation.getMk())
-                    .time(moodEvaluation.getT(), WritePrecision.MS);
+                    .addTag("studyID", moodmetricData.getStudyId())
+                    .addField("estimated_valence", moodEvaluation.getValence())
+                    .addField("estimated_arousal", moodEvaluation.getArousal())
+                    .addField("approximated_mood", moodEvaluation.getMood().getName())
+                    .addField("approximated_mood_valence", moodEvaluation.getMood().getValence())
+                    .addField("approximated_mood_arousal", moodEvaluation.getMood().getArousal())
+                    .addField("learning_relation", moodEvaluation.getLearningRelation())
+                    .addField("problem_awareness", moodEvaluation.getHasProblemAwareness())
+                    .addField("awareness_description", moodEvaluation.getAdditionalAwarenessDescription())
+                    .addField("intervention_request", moodEvaluation.getHasInterventionRequest())
+                    .addField("intervention_description", moodEvaluation.getAdditionalInterventionDescription())
+                    .time(moodEvaluation.getCreatedAt(), WritePrecision.MS);
             dataPoints.add(evalPoint);
         }
 
-        for (RawMeasurement rawMeasurement : moodmetricData.getRawMeasurement()) {
+        for (RawMeasurement rawMeasurement : moodmetricData.getRawSkinResistanceMeasurements()) {
             Point rawPoint = Point.measurement(this.userHash)
-                    .addField("raw", rawMeasurement.getR())
-                    .time(rawMeasurement.getT(), WritePrecision.MS);
+                    .addTag("studyID", moodmetricData.getStudyId())
+                    .addField("raw", rawMeasurement.getRawSkinResistance())
+                    .time(rawMeasurement.getCreatedAt(), WritePrecision.MS);
             dataPoints.add(rawPoint);
         }
-
         logger.info("Write data to db...");
         this.writeApi.writePoints(dataPoints);
         logger.info("Wrote " + dataPoints.size() + " entries");
@@ -81,6 +93,7 @@ public class InfluxWriter {
         logger.info("Collect data...");
         for (BitalinoMeasurement bitalinoMeasurement : bitalinoData.getBitalinoMeasurement()) {
             Point bitalinoPoint = Point.measurement(this.userHash)
+                    .addTag("studyID", bitalinoData.getStudyId())
                     .addField("s1", bitalinoMeasurement.getS1())
                     .addField("s2", bitalinoMeasurement.getS2())
                     .addField("s3", bitalinoMeasurement.getS3())
@@ -94,5 +107,17 @@ public class InfluxWriter {
         logger.info("Write data to db...");
         this.writeApi.writePoints(dataPoints);
         logger.info("Wrote " + dataPoints.size() + " entries");
+    }
+
+    public void writeContext(ContextData contextData) {
+        Point contextPoint = Point.measurement(this.userHash)
+                .addTag("studyID", contextData.getStudyId())
+                .addField("collaboration", contextData.getCollaboration())
+                .addField("environment", contextData.getEnvironment())
+                .addField("modality", contextData.getModality())
+                .time(contextData.getCreatedAt(), WritePrecision.MS);
+
+        logger.info("Write context-data to db...");
+        this.writeApi.writePoint(contextPoint);
     }
 }
