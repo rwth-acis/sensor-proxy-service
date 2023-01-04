@@ -28,7 +28,7 @@ public class StatementGenerator {
 
 		//Add verb
 		try {
-			JSONObject verbJSON = (sensorData instanceof MoodmetricData) ? createVerb("evaluated") : createVerb("evaluated_bitalino");
+			JSONObject verbJSON = (sensorData instanceof MoodmetricData) ? createVerb("evaluated_in") : createVerb("evaluated_bitalino_in");
 			retStatement.put("verb", verbJSON);
 		} catch (JSONException e) {
 			log.severe("There was a problem parsing the verb data");
@@ -52,7 +52,6 @@ public class StatementGenerator {
 			log.severe("There was a problem parsing the context extension data");
 			return null;
 		}
-
 		return retStatement;
 	}
 
@@ -62,6 +61,8 @@ public class StatementGenerator {
 		actorJSON.put("objectType", "Agent");
 		JSONObject account = new JSONObject();
 		account.put("name", userEmail);
+
+		account.put("homePage", "https://www.tech4comp.dbis.rwth-aachen.de/");
 		actorJSON.put("account", account);
 
 		return actorJSON;
@@ -91,7 +92,7 @@ public class StatementGenerator {
 
 		JSONObject definitionJSON = new JSONObject();
 		JSONObject nameJSON = new JSONObject();
-		nameJSON.put("en-US", "Study_" + studyID);
+		nameJSON.put("en-US", studyID);
 		JSONObject descriptionJSON = new JSONObject();
 		descriptionJSON.put("en-US", "A tech4comp Moodmetric study evaluation");
 		definitionJSON.put("name", nameJSON);
