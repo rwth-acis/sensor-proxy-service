@@ -111,7 +111,6 @@ public class StatementGenerator {
 		String moodEvalKey = keyCommonPart + "/moodEvaluation";
 		List<MoodEvaluation> moodEvalVal = sensorData.getMoodEvaluations();
 
-		//JSONArray moodEvalVal = dataJSON.getJSONArray("moodEvaluation");
 		extensionsJSON.put(moodEvalKey, moodEvalVal);
 
 		contextJSON.put("extensions", extensionsJSON);
