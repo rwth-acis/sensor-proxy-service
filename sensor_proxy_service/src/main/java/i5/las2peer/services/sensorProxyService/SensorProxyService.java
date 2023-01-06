@@ -13,7 +13,7 @@ import i5.las2peer.services.sensorProxyService.pojo.context.ContextData;
 import i5.las2peer.services.sensorProxyService.pojo.sensor.bitalino.BitalinoData;
 import i5.las2peer.services.sensorProxyService.pojo.sensor.moodmetric.MoodmetricData;
 import i5.las2peer.services.sensorProxyService.writer.InfluxWriter;
-import i5.las2peer.services.sensorProxyService.writer.MobSOSWriter;
+import i5.las2peer.services.sensorProxyService.writer.LRSWriter;
 import io.swagger.annotations.*;
 
 import javax.ws.rs.Consumes;
@@ -22,6 +22,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.util.logging.Level;
@@ -46,7 +47,7 @@ import java.util.logging.Level;
 public class SensorProxyService extends RESTService {
 	private final static L2pLogger logger = L2pLogger.getInstance(SensorProxyService.class.getName());
 	private final Gson gson = new GsonBuilder().serializeNulls().create();
-	private final MobSOSWriter mobSOSWriter = new MobSOSWriter();
+	private final LRSWriter lrsWriter = new LRSWriter();
 
 	public SensorProxyService() {
 		L2pLogger.setGlobalConsoleLevel(Level.INFO);
@@ -88,10 +89,9 @@ public class SensorProxyService extends RESTService {
 				// write to influxdb
 				writer.writeMoodmetric(moodmetricData);
 
-				// write to mobSOS if evaluation is provided
+				// write to LRS if evaluation is provided
 				if (!moodmetricData.getMoodEvaluations().isEmpty()) {
-					// mobSoS can't handle hash, so send plain mail
-					mobSOSWriter.write(moodmetricData, dataJSON, mail);
+					lrsWriter.write(moodmetricData, hashSHA384(mail));
 				}
 			} else {
 				logger.info("Received bitalino data");
@@ -100,29 +100,35 @@ public class SensorProxyService extends RESTService {
 				// write to influxdb
 				writer.writeBitalino(bitalinoData);
 
-				// write to mobSOS if evaluation is provided
+				// write to LRS if evaluation is provided
 				if (!bitalinoData.getMoodEvaluations().isEmpty()) {
-					// mobSoS can't handle hash, so send plain mail
-					mobSOSWriter.write(bitalinoData, dataJSON, mail);
+					lrsWriter.write(bitalinoData, hashSHA384(mail));
 				}
 			}
 			writer.close();
 		} catch (JsonSyntaxException jse) {
-			logger.severe("Format of request data is wrong:" + jse);
+			jse.printStackTrace();
 			return Response
 					.status(Response.Status.BAD_REQUEST)
 					.entity("{\"msg\": \"Wrong data formulation.\"}")
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		} catch (InfluxException ie) {
-			logger.severe(ie.toString());
+			ie.printStackTrace();
 			return Response
 					.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity("{\"msg\": \"Error sending to influxdb.\"}")
 					.type(MediaType.APPLICATION_JSON)
 					.build();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			return Response
+					.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity("{\"msg\": \"Error sending to lrs.\"}")
+					.type(MediaType.APPLICATION_JSON)
+					.build();
 		} catch (Exception e) {
-			logger.severe(e.toString());
+			e.printStackTrace();
 			return Response
 					.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity("{\"msg\": \"Unknown error occurred.\"}")
@@ -171,21 +177,21 @@ public class SensorProxyService extends RESTService {
 			writer.close();
 
 		} catch (JsonSyntaxException jse) {
-			logger.severe("Format of request data is wrong:" + jse);
+			jse.printStackTrace();
 			return Response
 					.status(Response.Status.BAD_REQUEST)
 					.entity("{\"msg\": \"Wrong data formulation.\"}")
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		} catch (InfluxException ie) {
-			logger.severe(ie.toString());
+			ie.printStackTrace();
 			return Response
 					.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity("{\"msg\": \"Error sending to influxdb.\"}")
 					.type(MediaType.APPLICATION_JSON)
 					.build();
 		} catch (Exception e) {
-			logger.severe(e.toString());
+			e.printStackTrace();
 			return Response
 					.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity("{\"msg\": \"Unknown error occurred.\"}")
